@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t nickschoey/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true nickschoey/react-test npm test
+
+after_success:
+  - docker build -t nickschoey/multi-client ./client
+  - docker build -t nickschoey/multi-nginx ./nginx
+  - docker build -t nickschoey/multi-server ./server
+  - docker build -t nickschoey/multi-worker ./worker
+  # Log in to Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push image to Docker Hub
+  - docker push nickschoey/multi-client
+  - docker push nickschoey/multi-nginx
+  - docker push nickschoey/multi-server
+  - docker push nickschoey/multi-worker
